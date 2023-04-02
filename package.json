@@ -1,15 +1,15 @@
 {
-    "name": "sanjeev-torrent",
-    "version": "1.0.0",
-    "description": "A bittorrent client for education purposes!",
-    "main": "index.js",
-    "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "author": "Sanjeev Musuvathy",
-    "license": "ISC",
-
-    "exports": {
-        ".": "./index.js"
-    }
+  "name": "sanjeev-torrent",
+  "version": "1.0.0",
+  "description": "A bittorrent client for education purposes!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sanjeev Musuvathy",
+  "license": "ISC",
+  "dependencies": {
+    "bencode": "^0.9.0",
+    "bignum": "^0.12.5"
   }
+}
