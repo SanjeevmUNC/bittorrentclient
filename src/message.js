@@ -14,7 +14,7 @@ export function buildHandshake(torrent) {
   // info hash
   infoHash(torrent).copy(buffer, 28);
   // peer id
-  buffer.write(genId());
+  genId().copy(buffer, 48);
   console.log(buffer + " Handshake")
   return buffer;
 };
@@ -93,7 +93,7 @@ export function buildRequest(payload) {
   buffer.writeUInt32BE(payload.begin, 9);
   // length
   buffer.writeUInt32BE(payload.length, 13);
-  return buf;
+  return buffer;
 };
 
 export function buildPiece(payload) {

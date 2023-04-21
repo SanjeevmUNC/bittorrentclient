@@ -1,14 +1,15 @@
 import dgram from "dgram";
 import Buffer from "buffer" 
 import crypto from "crypto";
-import util from "../util.js"
+import * as util from "../util.js"
 import { infoHash, size } from "./torrent-parser.js";
 
 export function getPeers(torrent, callback) {
   const socket = dgram.createSocket('udp4');
   socket.bind();
 
-  let url = new URL(torrent.announce[1]);
+  let url = new URL(torrent.announce[0]);
+  console.log(torrent.announce)
 
   udpSend(socket, buildConnReq(), url);
   

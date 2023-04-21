@@ -1,6 +1,6 @@
 import net from "net";
 import { getPeers } from "./tracker.js";
-import "./message.js"
+import * as msg from "./message.js"
 import { queue } from "./queue.js";
 import fs from "fs"
 import { Pieces } from "./pieces.js";
@@ -18,24 +18,24 @@ function download(peer, torrent, pieces, file) {
   const socket = new net.Socket({writeable: true})
   socket.on('error', console.log);
   socket.connect(peer.port, peer.ip, () => {
-    socket.write(buildHandshake(torrent));
+    socket.write(msg.buildHandshake(torrent));
   });
   const q = new queue(torrent);
   onFullMessage(socket, message => messageHandler(message, socket, pieces, q, torrent, file));
-  socket.end()
 }
 
 function onFullMessage(socket, callback) {
-  const savedBuffer = Buffer.alloc(0);
-  const handshake = true;
+  let savedBuffer = Buffer.alloc(0);
+  let handshake = true;
+
   socket.on('data', receivedBuffer => {
-    // messageLen calculates the length of a whole message
-    const messageLen = () => handshake ? savedBuffer.readUInt8(0) + 49 : savedBuffer.readInt32BE(0) + 4;
+    // msgLen calculates the length of a whole message
+    const msgLen = () => handshake ? savedBuffer.readUInt8(0) + 49 : savedBuffer.readInt32BE(0) + 4;
     savedBuffer = Buffer.concat([savedBuffer, receivedBuffer]);
 
-    while (savedBuffer.length >= 4 && savedBuffer.length >= messageLen()) {
-      callback(savedBuffer.Uint8Array.prototype.slice(0, messageLen()));
-      savedBuffer = savedBuffer.Uint8Array.prototype.slice(messageLen());
+    while (savedBuffer.length >= 4 && savedBuffer.length >= msgLen()) {
+      callback(savedBuffer.slice(0, msgLen()));
+      savedBuffer = savedBuffer.slice(msgLen());
       handshake = false;
     }
   });
@@ -45,7 +45,7 @@ function messageHandler(message, socket, pieces, queue, torrent, file) {
   if (isHandshake(message)) {
     socket.write(buildInterested());
   } else {
-    const m = parse(message);
+    const m = msg.parseMessage(message);
 
     if (m.id === 0) chokeHandler(socket);
     if (m.id === 1) unchokeHandler(socket, pieces, queue);
@@ -105,7 +105,7 @@ function requestPiece(socket, pieces, queue) {
   while (queue.length()) {
     const pieceBlock = queue.deque();
     if (pieces.needed(pieceBlock)) {
-      socket.write(buildRequest(pieceBlock));
+      socket.write(msg.buildRequest(pieceBlock));
       pieces.addRequested(pieceBlock);
       break;
     }
