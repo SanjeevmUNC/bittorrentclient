@@ -1,10 +1,10 @@
-import * as tracker from "./tracker.js";
 import ParseTorrent from "parse-torrent";
 import fs from "fs";
+import { startDownload } from "./src/download.js";
 
+// Will be user input in the final version
 let torrent = await ParseTorrent(fs.readFileSync('./slacko64-7.0.iso.torrent'))
 
-tracker.getPeers(torrent, peers => {
-  console.log('list of peers: ', peers);
-});
+startDownload(torrent, torrent.info.name)
+
 
