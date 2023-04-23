@@ -6,6 +6,8 @@ import fs from "fs"
 import { Pieces } from "./pieces.js";
 import { Buffer } from "buffer";
 
+let paused = false;
+
 export function startDownload(torrent, path) {
   getPeers(torrent, peers => {
     const p = new Pieces(torrent);
@@ -22,6 +24,16 @@ function download(peer, torrent, pieces, file) {
   });
   const q = new queue(torrent);
   onFullMessage(socket, message => messageHandler(message, socket, pieces, q, torrent, file));
+}
+
+export function pauseDownload(socket) {
+  paused = true;
+  socket.write(msg.buildChoke())
+}
+
+export function resumeDownload(socket) {
+  paused = false;
+  socket.write(msg.buildUnchoke())
 }
 
 function onFullMessage(socket, callback) {
@@ -47,8 +59,8 @@ function messageHandler(message, socket, pieces, queue, torrent, file) {
   } else {
     const m = msg.parseMessage(message);
 
-    if (m.id === 0) chokeHandler(socket);
-    if (m.id === 1) unchokeHandler(socket, pieces, queue);
+    if (m.id === 0 && paused==false) chokeHandler(socket);
+    if (m.id === 1 && paused==false) unchokeHandler(socket, pieces, queue);
     if (m.id === 4) haveHandler(socket, pieces, queue, m.payload);
     if (m.id === 5) bitfieldHandler(socket, pieces, queue, m.payload);
     if (m.id === 7) pieceHandler(socket, pieces, queue, torrent, file, m.payload);
