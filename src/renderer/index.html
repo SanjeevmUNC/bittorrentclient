@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="'en">
+<head>
+    <meta name = "viewport" content = "width=device-width, intital-scale=1.0">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel = "stylesheet" type "text/css" href = "index.css">
+    
+    <link href="./tabulator-tables/dist/css/tabulator.css" rel="stylesheet">
+    <script type="text/javascript" src="./tabulator-tables/dist/js/tabulator.min.js"></script>
+    <script src="./renderer.js"></script>
+</head>
+
+<body>
+    
+    <header>
+        <div class = "navgroup">
+            <ul class="navbartop">
+                <button type="button" id="upload"><a href="#"  class="navbar__link" id = "uploadIcon">
+                    <span class="material-icons" title = "Select Torrent File to upload">upload_file</span>
+                </a></button>
+                <button type ="button" id="download"><a href="#"  class="navbar__link" id = "downloadIcon">
+                    <span class="material-icons" title = "Download Selected File">download</span></button>
+                <button id = "resume"><a href="#" class="navbar__link" id = "resumeIcon">
+                    <span class="material-icons"
+                    title = "Resume Download">play_arrow</span>
+                </a></button>
+                <button id = "pause"><a href="#" class="navbar__link" id = "pauseIcon">
+                    <span class="material-icons" title = 'Pause Download'>pause</span>
+                </a></button>
+                <button id = "delete"><a href="#" class="navbar__link" id = "deleteIcon">
+                    <span class="material-icons" Title = 'Remove'>delete</span>
+                </a></button>
+            </ul>
+        </div>
+    </header>
+
+    <div id="DownloadTable" class="DownloadTable"></div>
+
+        
+    <section class="bottom_info_panel">
+
+        <div class="download_info" style="display: none;" id = "download_info">
+            <section class = "info_layout">
+                <div class = progress>
+                    <label for="file">Downloading Progress:</label>
+                    <progress id="file" value="1" max="100"></progress>
+                </div>
+                <div class = transfer>
+
+
+                </div>
+                <div class = infomation></div>
+            </section>
+        </div>
+
+        <div class = "seeding_info" style="display: none;" id = "seeding_info">
+        
+        </div>
+
+        <div class = "file_info" style = "display: none;" id = "file_info">
+        
+        </div>
+    </section>
+</body>
+
+</html>

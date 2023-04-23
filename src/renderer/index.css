@@ -1,0 +1,87 @@
+*
+{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+
+body
+{
+    background: #d8d8d8;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+header
+{
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background: #a09c9c;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 15px 15px rgba(0, 0, 0, 0.05);
+    grid-area: header;
+}
+.group
+{
+    display: flex;
+    align-items: center;
+}
+header ul
+{
+    position: relative;
+    display: flex;
+    gap: 10px;
+}
+header ul button
+{
+    border: none;
+    padding: 5px 5px;
+    background-color:#8b8888
+    
+}
+header ul li
+{
+    list-style: none;
+}
+header ul li a
+{
+    position: relative;
+    text-decoration: none;
+    font-size: 1em;
+    letter-spacing: 3pt;
+    color: #000;
+    float: left;
+    align-items: stretch;
+}
+header ul li a:hover {
+    background-color: #c5c3c3;
+}
+#resumeIcon
+{
+    color: #0aca0a; 
+}
+#pauseIcon
+{
+    color: rgb(218, 240, 24);
+}
+#deleteIcon
+{
+    color: #ca0a0a;
+}
+
+
+.download_info
+{
+    position: relative;
+    display: flex;
+    grid-area: footer;
+    top: 20px;
+    height: 30%;
+}
