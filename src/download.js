@@ -128,7 +128,7 @@ function pieceHandler(socket, pieces, queue, torrent, file, pieceResp) {
   if (pieces.isDone()) {
     console.log('DONE!');
     socket.end();
-    incrementDoneCounter()
+    doneCounter += 1
     console.log(doneCounter)
     try { fs.closeSync(file); } catch(e) {}
   } else {
@@ -157,10 +157,6 @@ function requestPiece(socket, pieces, queue) {
 function isHandshake(message) {
   return message.length === message.readUInt8(0) + 49 &&
          message.toString('utf8', 1) === 'BitTorrent protocol';
-}
-
-export function incrementDoneCounter() {
-  doneCounter += 1
 }
 
 async function killTime() {

@@ -33,7 +33,6 @@ export class Pieces {
 
   isDone() {
     if (this._percentDone>=99.95) {
-      //incrementDoneCounter()
       return (this._percentDone>=99.95);
     } else {
       return false;

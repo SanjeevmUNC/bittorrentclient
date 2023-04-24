@@ -1,6 +1,4 @@
 import os from "os"
-import net from "net"
-import * as msg from "./message.js"
 
 // User toggle
 let bindIPOn = false;
@@ -24,22 +22,6 @@ export function dgramBind(socket, network_interface) {
   return
 }
 
-export function netBind(port, ip, network_interface, torrent) {
-  var socket = net.createConnection({
-    port: port,
-    host: ip,
-    localAddress: getInterfaceAddress(network_interface),
-    writable: true
-  }, () => {
-    socket.write(msg.buildHandshake(torrent));
-  });
-
-  // const address = getInterfaceAddress(network_interface)
-  // socket.connect(port, ip, address, () => {
-  //   socket.write(msg.buildHandshake(torrent));
-  // });
-  return socket
-} 
 
 
 
