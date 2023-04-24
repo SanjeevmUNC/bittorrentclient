@@ -1,6 +1,6 @@
 import { blocksPerPiece, blockLen, BLOCK_LEN } from "./torrent-parser.js";
 
-export class queue {
+export class Queue {
   constructor(torrent) {
     this._torrent = torrent;
     this._queue = [];

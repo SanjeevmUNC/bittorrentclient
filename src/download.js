@@ -1,12 +1,14 @@
 import net from "net";
 import { getPeers } from "./tracker.js";
 import * as msg from "./message.js"
-import { queue } from "./queue.js";
+import { Queue } from "./queue.js";
 import fs from "fs"
 import { Pieces } from "./pieces.js";
 import { Buffer } from "buffer";
+import { getInterfaceAddress, getBindIP } from "./interface-binding.js"
 
 let paused = false;
+let doneCounter = 0;
 
 export function startDownload(torrent, path) {
   getPeers(torrent, peers => {
@@ -14,26 +16,43 @@ export function startDownload(torrent, path) {
     const file = fs.openSync(path, 'w');
     peers.forEach(peer => download(peer, torrent, p, file));
   });
+  return;
 };
+
+export function stopDownload() {
+  process.exit()
+}
 
 function download(peer, torrent, pieces, file) {
   const socket = new net.Socket({writeable: true})
   socket.on('error', console.log);
-  socket.connect(peer.port, peer.ip, () => {
-    socket.write(msg.buildHandshake(torrent));
-  });
-  const q = new queue(torrent);
-  onFullMessage(socket, message => messageHandler(message, socket, pieces, q, torrent, file));
+
+  if (getBindIP() == true) {
+    // User input
+    socket.connect({port: peer.port, host: peer.ip, localAddress: getInterfaceAddress('utun7')}, () => {
+      socket.write(msg.buildHandshake(torrent));
+    });
+  } else {
+    socket.connect({port: peer.port, host: peer.ip}, () => {
+      socket.write(msg.buildHandshake(torrent));
+    });
+  }
+
+  const queue = new Queue(torrent);
+  onFullMessage(socket, message => messageHandler(message, socket, pieces, queue, torrent, file));
+  return;
 }
 
 export function pauseDownload(socket) {
   paused = true;
   socket.write(msg.buildChoke())
+  return;
 }
 
 export function resumeDownload(socket) {
   paused = false;
   socket.write(msg.buildUnchoke())
+  return;
 }
 
 function onFullMessage(socket, callback) {
@@ -41,7 +60,6 @@ function onFullMessage(socket, callback) {
   let handshake = true;
 
   socket.on('data', receivedBuffer => {
-    // msgLen calculates the length of a whole message
     const msgLen = () => handshake ? savedBuffer.readUInt8(0) + 49 : savedBuffer.readInt32BE(0) + 4;
     savedBuffer = Buffer.concat([savedBuffer, receivedBuffer]);
 
@@ -51,6 +69,7 @@ function onFullMessage(socket, callback) {
       handshake = false;
     }
   });
+  return;
 }
 
 function messageHandler(message, socket, pieces, queue, torrent, file) {
@@ -65,15 +84,18 @@ function messageHandler(message, socket, pieces, queue, torrent, file) {
     if (m.id === 5) bitfieldHandler(socket, pieces, queue, m.payload);
     if (m.id === 7) pieceHandler(socket, pieces, queue, torrent, file, m.payload);
   }
+  return;
 }
 
 function chokeHandler(socket) { 
   socket.end()
+  return;
 }
 
 function unchokeHandler(socket, pieces, queue) {
   queue.choked = false;
   requestPiece(socket, pieces, queue);
+  return;
 }
 
 
@@ -82,6 +104,7 @@ function haveHandler(socket, pieces, queue, payload) {
   const queueEmpty = queue.length === 0;
   queue.queue(pieceIndex);
   if (queueEmpty) requestPiece(socket, pieces, queue);
+  return;
 }
 
 function bitfieldHandler(socket, pieces, queue, payload) { 
@@ -93,10 +116,10 @@ function bitfieldHandler(socket, pieces, queue, payload) {
     }
   });
   if (queueEmpty) requestPiece(socket, pieces, queue);
- }
+  return;
+}
 
 function pieceHandler(socket, pieces, queue, torrent, file, pieceResp) {
-  console.log(pieceResp);
   pieces.addReceived(pieceResp);
 
   const offset = pieceResp.index * torrent.info['piece length'] + pieceResp.begin;
@@ -105,10 +128,16 @@ function pieceHandler(socket, pieces, queue, torrent, file, pieceResp) {
   if (pieces.isDone()) {
     console.log('DONE!');
     socket.end();
+    incrementDoneCounter()
+    console.log(doneCounter)
     try { fs.closeSync(file); } catch(e) {}
   } else {
     requestPiece(socket, pieces, queue);
   }
+
+  pieces.printPercentDone()
+  killTime()
+  return;
 }
 
 function requestPiece(socket, pieces, queue) {
@@ -122,9 +151,23 @@ function requestPiece(socket, pieces, queue) {
       break;
     }
   }
+  return;
 }
 
 function isHandshake(message) {
   return message.length === message.readUInt8(0) + 49 &&
          message.toString('utf8', 1) === 'BitTorrent protocol';
+}
+
+export function incrementDoneCounter() {
+  doneCounter += 1
+}
+
+async function killTime() {
+  if (doneCounter>=0) {
+    console.log('Cleaning up...')
+    setTimeout(() => {
+      process.exit()
+    }, 15000);
+  }
 }

@@ -3,11 +3,18 @@ import Buffer from "buffer"
 import crypto from "crypto";
 import * as util from "../util.js"
 import { infoHash, size } from "./torrent-parser.js";
+import { getBindIP, dgramBind } from "./interface-binding.js";
 
 export function getPeers(torrent, callback) {
   const socket = dgram.createSocket('udp4');
-  socket.bind();
 
+  // Need user input interface name to bind client to the VPN interface.
+  if (getBindIP() == true) {
+    dgramBind(socket, 'utun7')
+  } else {
+    socket.bind();
+  }
+  
   let url = new URL(torrent.announce[0]);
   console.log(torrent.announce)
 

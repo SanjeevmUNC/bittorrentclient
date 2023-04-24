@@ -10,6 +10,7 @@ export class Pieces {
 
     this._requested = buildPiecesArray();
     this._received = buildPiecesArray();
+    this._percentDone = 0;
   }
 
   addRequested(pieceBlock) {
@@ -31,7 +32,12 @@ export class Pieces {
   }
 
   isDone() {
-    return this._received.every(blocks => blocks.every(i => i));
+    if (this._percentDone>=99.95) {
+      //incrementDoneCounter()
+      return (this._percentDone>=99.95);
+    } else {
+      return false;
+    }
   }
 
   printPercentDone() {
@@ -43,8 +49,10 @@ export class Pieces {
       return blocks.length + totalBlocks;
     }, 0);
 
-    const percent = Math.floor(downloaded / total * 100);
+    const percent = Math.ceil((downloaded / total * 100)*100)/100;
 
-    process.stdout.write('progress: ' + percent + '%\r');
+    this._percentDone = percent;
+
+    console.log('progress: ' + (Math.ceil(percent*10)/10) + '%\r');
   }
 };
