@@ -2,16 +2,10 @@
 async function updateTable(table) {
     //Updates Client with files uploaded from other users.
     // Files that have been added or had there data updated are handled here
-    var infoToUpdate = await window.electronAPI.dataForceUpdate()
+    var infoToUpdate = await window.electronAPI.dataLoadIn()
+    console.log(infoToUpdate)
     table.updateOrAddData(infoToUpdate);
-    
-
 }
-
-window.electronAPI.dataRetrival((event, data) => {
-    //Every Time Main sends dataRetrivial to Renderer, update the table to reflect changes
-    table.updateOrAddData(data)
-})
 
 window.addEventListener("load", async function() {
     const upload = document.getElementById('upload')
@@ -20,13 +14,9 @@ window.addEventListener("load", async function() {
     const resume = document.getElementById('resume')
     const download = document.getElementById('download')
 
-    //var tableData = () => {window.electronAPI.dataRetrival()};
+    var tableData = await window.electronAPI.dataLoadIn() //Make it into an invoke
+    console.log(tableData)
 
-    let tableData = [
-        {"id": "1", "name": "Some File", "size": "10 Mb", "progress": "53", "status": "Downloading", "eta": "37 mins", "seeds": "6", "peers": "10", "uploadSpeed": "---", "downloadSpeed": "1 Mb/s", "availability": 100.00},
-        {id: 2, name: "Some Other File", size: "13 Mb", progress: 100, status: "Seeding", eta: "---", seeds: 6, peers: 10, uploadSpeed: "1 Mb/s", downloadSpeed: "---", availability: 53.45},
-    ]
-    
     var table = new Tabulator("#DownloadTable", {
         height: "97%",
         data: tableData,
@@ -53,7 +43,9 @@ window.addEventListener("load", async function() {
     table.on("rowClick", function(e, row){
         selectedFile = row; //Saves pointer to row; use selecedFile.getData().x to access fields 
         //debugging
+        console.log(selectedFile.getData()["file_name"])
         for (var key in selectedFile.getData()) {
+            console.log(key)
             console.log(selectedFile.getData()[key]);
         }
     })
@@ -63,13 +55,15 @@ window.addEventListener("load", async function() {
     //If (x) Structure to ensure that the element was loaded in correctly during above listener
     
     if (download) {
-        upload.addEventListener('click', async () => {
+        download.addEventListener('click', async () => {
             if (selectedFile === undefined) {
                 this.alert("Cannot remove seeding file: no file is selected. Please click on a file that you are seeding that you wish to stop seeding.");
             }
             if (selectedFile.getData().status === "Available") {
                 try{
-                    const downloadDialogSucc = await this.window.electronAPI.downloadFile();
+                    let fileName = selectedFile.getData()["file_name"]
+                    console.log(fileName)
+                    const downloadDialogSucc = await this.window.electronAPI.downloadFile(fileName); //Sends file name to be downloaded, expects a return promise
                     if(!downloadDialogSucc) {
                         this.alert("Download Failed: Please Try again")
                     } else {
@@ -81,7 +75,6 @@ window.addEventListener("load", async function() {
             }
             
         })
-
     } else {
         console.log("Header Rendering Issue: Download Button was not loaded in before Listener was Assigned")
     }
@@ -92,6 +85,7 @@ window.addEventListener("load", async function() {
             //Sends Two way protocal to Main.js. If unsuccessful, receives the promise var
             // to alert user that something went wrong. Else procedes as normal
             const fileDialogSucc = await window.electronAPI.upload()
+            console.log(fileDialogSucc)
             if (!fileDialogSucc) {
                 this.alert("Upload Failed: Please Try again")
             }
@@ -108,7 +102,7 @@ window.addEventListener("load", async function() {
             }
             if (selectedFile.getData().status === "Seeding") {
                 try{
-                    successful = await window.electronAPI.removeSeed(1) // TODO: Replace once we figure out file commuication
+                    successful = await window.electronAPI.removeSeed(selectedFile.getData()["file_name"]) 
                     if (successful) {
                         table.deleteRow(selectedFile.getData().id);
                         selectedFile = null;
@@ -133,9 +127,9 @@ window.addEventListener("load", async function() {
             }
             if (selectedFile.getData().status === "Downloading") {
                 try{
-                    file = await window.electronAPI.pauseFile(1) // Replace once we figure out file commuication
+                    file = await window.electronAPI.pauseFile(selectedFile.getData()["file_name"]) 
                     if (file) {
-                        table.update([{name: file,}]) // Pass info to convey update to 
+                        console.log('Pause successful')  
                     }
                 }
                 catch (err) {
@@ -143,7 +137,7 @@ window.addEventListener("load", async function() {
                 }
             }
             else {
-                alert("Cannot remove seeding file: file selected is not file being seeded by user. Please click on a file that you are seeding that you wish to stop seeding.");
+                alert("Cannot Pause File: Selected File is not currently Downloading.");
             }
         });
             
@@ -158,9 +152,9 @@ window.addEventListener("load", async function() {
             }
             if (selectedFile.getData().status === "Paused") {
                 try{
-                    file = await window.electronAPI.resumeFile(1) // Ca;; to 
+                    file = await window.electronAPI.resumeFile(selectedFile.getData()["file_name"]) 
                     if (file) {
-                        table.update([{name: file, status: "downloading"}]);
+                        console.log('Resume Successful');
                     }
                 }
                 catch (err) {
@@ -168,13 +162,34 @@ window.addEventListener("load", async function() {
                 }
             }
             else {
-                alert("Cannot remove seeding file: file selected is not file being seeded by user. Please click on a file that you are seeding that you wish to stop seeding.");
+                alert("Cannot resume downloading file: File is not paused");
             }
         })
     } else {
         console.log("Header Rendering Issue: Resume Button was not loaded in before Listener was Assigned")
     }
+
+    // Create an Observable instead of a Promise;
+const interval = new Observable(({next}) => {
+    setInterval(() => next("update"), 1000);
+});
+
+const subscription = interval.subscribe({ next: (data) => updateTable(table) });
+    
 })
 
-
+class Observable {
+    constructor(exec) {
+        this.listeners = new Set;
+        exec({
+            next: (value) => this.listeners.forEach(({next}) => next && next(value)),
+            error: (err) => this.listeners.forEach(({error}) => error && error(err)),
+            complete: () => this.listeners.forEach(({complete}) => complete && complete())
+        });
+    }
+    subscribe(listeners) {
+        this.listeners.add(listeners);
+        return { unsubscribe: () => this.listeners.delete(listeners) }
+    }
+}
 

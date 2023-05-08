@@ -2,8 +2,8 @@
     "name": "sanjeev-torrent",
     "version": "1.0.0",
     "description": "A bittorrent client for education purposes!",
-    
     "main": "main.js",
+
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "electron ."
@@ -21,6 +21,7 @@
         "bigint-buffer": "^1.1.5",
         "bindings": "^1.5.0",
         "child_process": "^1.0.2",
+        "electron-db": "^0.15.7",
         "electron-store": "^8.1.0",
         "eletron": "^0.0.1-security",
         "parse-torrent": "^11.0.8",
