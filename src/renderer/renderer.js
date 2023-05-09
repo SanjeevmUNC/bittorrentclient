@@ -42,12 +42,6 @@ window.addEventListener("load", async function() {
 
     table.on("rowClick", function(e, row){
         selectedFile = row; //Saves pointer to row; use selecedFile.getData().x to access fields 
-        //debugging
-        console.log(selectedFile.getData()["file_name"])
-        for (var key in selectedFile.getData()) {
-            console.log(key)
-            console.log(selectedFile.getData()[key]);
-        }
     })
 
 

@@ -3,10 +3,9 @@ const path = require('path');
 const { getWindowSettings, saveBounds } = require("./src/settings");
 const db = require('electron-db');
 const fs = require('fs');
-//TODO: Change from module (require) to import. Can use VSCODE lightbulb to do it automatically
-// const { buildCancel } = require('./src/message');
-//const {startDownload, pauseDownload, resumeDownload} = require("./src/download.js");
-//const ParseTorrent = require(ParseTorrent)
+const { buildCancel } = require('./src/message');
+const {startDownload, pauseDownload, resumeDownload} = require("./src/download.js");
+const ParseTorrent = require(ParseTorrent)
 
 
 //Handler functions for IPC Structure
@@ -47,9 +46,9 @@ async function handleUpload() {
 async function handleDownloadFile(file) {
     //file -> file path to be downloaded 
     try {
-        //let torrent = await ParseTorrent(fs.readFileSync('file')) -> TODO: Uncomment once Change from require to ES6 import format
-        //startDownload(torrent, torrent.info.name)
-        let filestr = file //TODO: fix weird bug where instead of the name of the file, a long slew of stuff is returned instead
+        let torrent = await ParseTorrent(fs.readFileSync('file')) 
+        startDownload(torrent, torrent.info.name)
+        let filestr = file 
         console.log(file)
         //Update table
         let where = {
@@ -112,12 +111,11 @@ async function handleRemoveSeed(file) {
     //Push changes to JSON file so new users connecting to client do not see old seed file
     //if successful, return file name so file can be deleted for all users
     try {
-        //buildCancel(file) => Cancel the building process for the seeded file
-
+        buildCancel(file) 
         db.deleteRow('P2Pfiles', {'file_name': file}, (succ, msg) => {
             console.log(msg)
+            return succ
         })
-        return true
 
     } catch (error) {
         console.log(error)
@@ -126,11 +124,8 @@ async function handleRemoveSeed(file) {
 }
 
 async function handleResumeFile(file){
-    //resumes downloading of a Paused File
-    
     try {
-
-        //resumeDownload(file)
+        resumeDownload(file)
         let where = {
             "file_name": file
         }
@@ -186,7 +181,7 @@ function createWindow () {
     title: "VPBittorrent",
     icon: 'src/assets/icon.png',
     webPreferences: {
-      devTools: true,
+      devTools: false,
       preload: path.join(__dirname, './src/preload.js')
     }
   })
@@ -194,9 +189,6 @@ function createWindow () {
 
   
   mainWindow.on("resized", () => saveBounds(mainWindow.getSize()));
-  //Enable Dev tools, remove when final 
-  let wc = mainWindow.webContents;
-  wc.openDevTools({ mode: "undocked" });
 
   //Load HTML
   mainWindow.loadFile('./src/renderer/index.html')
@@ -231,14 +223,20 @@ app.whenReady().then(() => {
     }
   })
 
-  // TODO: load in initial P2P data here
+  
   let tableData = [
     {name: "Some File", file_name: "/C/Fake", size: "10 Mb", progress: 53, status: "Downloading", eta: "37 mins", seeds: 6, peers: 10, uploadSpeed: "---", downloadSpeed: "1 Mb/s"},
     {name: "Some Other File", file_name: "/C/Fake", size: "13 Mb", progress: 100, status: "Seeding", eta: "---", seeds: 6, peers: 10, uploadSpeed: "1 Mb/s", downloadSpeed: "---"},
     {name: "Some Other File", file_name: "/C/Fake", size: "13 Mb", progress: 100, status: "Available", eta: "---", seeds: 6, peers: 10, uploadSpeed: "1 Mb/s", downloadSpeed: "---"}
     ]
+  //onFullMessage(socket, callback)
+  
+  //fake data [
+   // {name: "Some File", file_name: "/C/Fake", size: "10 Mb", progress: 53, status: "Downloading", eta: "37 mins", seeds: 6, peers: 10, uploadSpeed: "---", downloadSpeed: "1 Mb/s"},
+   // {name: "Some Other File", file_name: "/C/Fake", size: "13 Mb", progress: 100, status: "Seeding", eta: "---", seeds: 6, peers: 10, uploadSpeed: "1 Mb/s", downloadSpeed: "---"},
+   // {name: "Some Other File", file_name: "/C/Fake", size: "13 Mb", progress: 100, status: "Available", eta: "---", seeds: 6, peers: 10, uploadSpeed: "1 Mb/s", downloadSpeed: "---"}
+   // ]
     
-
   if (db.valid('P2Pfiles')) {
     for (entry in tableData){
         db.insertTableContent('P2Pfiles', tableData[entry], (succ, msg) => {
@@ -249,10 +247,6 @@ app.whenReady().then(() => {
     }
   }
 
-
-  //Set interverval for consisitant realtime updating of the display table
-  //setInterval(handleDataRetrival)
-  
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
