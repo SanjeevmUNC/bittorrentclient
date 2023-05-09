@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
     "name": "sanjeev-torrent",
     "version": "1.0.0",
     "description": "A bittorrent client for education purposes!",
@@ -27,4 +28,19 @@
         "parse-torrent": "^11.0.8",
         "tabulator-tables": "^5.4.4"
     }
+=======
+  "name": "sanjeev-torrent",
+  "version": "1.0.0",
+  "description": "A bittorrent client for education purposes!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sanjeev Musuvathy",
+  "license": "ISC",
+  "dependencies": {
+    "bencode": "^0.9.0",
+    "bignum": "^0.12.5"
+  }
+>>>>>>> main
 }
