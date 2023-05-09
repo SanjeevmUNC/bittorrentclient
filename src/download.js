@@ -29,12 +29,12 @@ function download(peer, torrent, pieces, file) {
 
 export function pauseDownload(socket) {
   paused = true;
-  socket.write(msg.buildChoke())
+  socket.write(msg.buildUninterested())
 }
 
 export function resumeDownload(socket) {
   paused = false;
-  socket.write(msg.buildUnchoke())
+  socket.write(msg.buildInterested())
 }
 
 function onFullMessage(socket, callback) {
